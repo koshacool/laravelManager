@@ -3,7 +3,7 @@
 @section('content')
     <div class="block">
         <div class="authorizationForm">
-            <form class='authorization' action="{{ url('/login') }}" method="post" id="authorisation">
+            <form class="authorization" method="post"  action="{{ url('/login') }}"  id="authorisation">
                 {{ csrf_field() }}
                 <div class="text">
                     <p>Authorisation</p>
