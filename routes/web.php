@@ -12,7 +12,7 @@
 */
 
 //Route::get('/', ['uses' => 'UsersController@authorisation']);
-$this->get('/', 'Auth\LoginController@showLoginForm')->name('login');
+Route::get('/', 'Auth\LoginController@showLoginForm')->name('login');
 Route::get('authorisation', ['uses' => 'UsersController@authorisation']);
 Route::get('users/registration', ['uses' => 'UsersController@registration']);
 Route::post('users/registration', ['uses' => 'UsersController@create']);
@@ -20,4 +20,4 @@ Route::post('users/registration', ['uses' => 'UsersController@create']);
 //Laravel auth
 Auth::routes();
 
-Route::get('/home', 'HomeController@index');
+Route::get('/showlist', 'PagesController@showlist');
