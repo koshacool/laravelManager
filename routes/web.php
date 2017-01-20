@@ -21,3 +21,4 @@ Route::post('users/registration', ['uses' => 'UsersController@create']);
 Auth::routes();
 
 Route::get('/showlist', 'ContactController@showlist');
+Route::post('/showlist', 'ContactController@showlist');

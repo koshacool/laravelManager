@@ -7,6 +7,8 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Auth;
+use App\Http\Middleware\Sort;
+use App\Http\Middleware\Pagination;
 
 use App\Contact;
 use App\Phone;
@@ -17,6 +19,7 @@ use App\AddressType;
 use App\Country;
 use App\State;
 use App\Location;
+
 
 class ContactController extends Controller
 {
@@ -35,34 +38,33 @@ class ContactController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function showlist()
+    public function showlist(Request $request)
     {
 
-         $contacts = Contact::all();
-        return Contact::with('phones')->get();
-//        return      $contacts->phones()->where('best_phone', 1)->get();
-        foreach ($contacts as $contact) {
-            $phone = $contact->phones()->where('best_phone', 1)->get();
-            return $phone;
-            $contact->phone = $phone;
-        }
+        $sorting = new Sort();
+        $sortValues = $sorting->sortTable($request->all());
+
+        $contacts = Contact::with(['phones' => function ($query) {
+            $query->where('best_phone', '=', '1');
 
 
-//        $phone = Phone::where('best_phone', 1)
-//            ->where('contact_id', $contacts->id)
-////            ->value('phone')
-//            ->first();
-//        return $phone;
-////         $this->addContact();
-//        foreach ($contacts as $contact) {
-////            $phone = Phone::where('best_phone', 1)->where('contact_id', $contact->id)->value('phone);
-////            var_dump($phone);
-////            $contact->test = $phone->phone;
-//        }
+//                $data['secondarySortColumn'] => $data['sortDirectionSecondaryColumn']),
+        }])
+            ->orderBy($sortValues['mainSortColumn'], $sortValues['sortDirectionMainColumn'])
+            ->orderBy($sortValues['secondarySortColumn'], $sortValues['sortDirectionSecondaryColumn'])
+            ->paginate(3);
 
-//        $this->removeContact(1);
-//        return $contacts;
-        return view('pages.showlist', ['contacts' => $contacts]);
+        $sortValues['page'] = $contacts->currentPage();
+        $sortValues['offset'] = $contacts->firstItem();
+        $pagination = new Pagination();
+        //Get pages for display pages links
+        $firstLastPages = $pagination->pagination($contacts->currentPage(), $contacts->lastPage());
+        $sortValues = array_merge($firstLastPages, $sortValues);
+
+
+        return view('pages.showlist',
+            ['contacts' => $contacts,
+             'sortValues' => $sortValues]);
     }
 
     public function addContact()
