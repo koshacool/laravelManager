@@ -20,4 +20,4 @@ Route::post('users/registration', ['uses' => 'UsersController@create']);
 //Laravel auth
 Auth::routes();
 
-Route::get('/showlist', 'PagesController@showlist');
+Route::get('/showlist', 'ContactController@showlist');

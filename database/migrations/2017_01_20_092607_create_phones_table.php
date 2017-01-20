@@ -17,7 +17,7 @@ class CreatePhonesTable extends Migration
             $table->increments('id');
             $table->integer('contact_id');
             $table->integer('phone_type_id');
-            $table->enum('best_phone', array('0', '1'));
+            $table->integer('best_phone');
             $table->string('phone')->nullable()->default(null);
             $table->timestamps();
         });

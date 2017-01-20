@@ -6,5 +6,24 @@ use Illuminate\Database\Eloquent\Model;
 
 class Address extends Model
 {
-    //
+
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array
+     */
+    protected $fillable = [
+        'address', 'address_type_id',
+    ];
+
+
+    public function contact()
+    {
+        return $this->belongsTo('App\Contact');
+    }
+
+    public function addressTypes()
+    {
+        return $this->hasMany('App\AddressType');
+    }
 }
