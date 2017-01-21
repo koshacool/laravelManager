@@ -25,17 +25,17 @@
             <ul class="menu">
                 <li>
                     <div class="linkStyle">
-                        <a href="/contact/showlist"><img src="images/home.png"><span>Home</span></a>
+                        <a href="/showlist"><img src="images/home.png"><span>Home</span></a>
                     </div>
                     <ul class="submenu">
                         <li>
                             <div class="linkStyle">
-                                <a href="/contact/record"><span>Add</span></a>
+                                <a href="/record"><span>Add</span></a>
                             </div>
                         </li>
                         <li>
                             <div class="linkStyle">
-                                <a href="/contact/emails"><span>Event</span></a>
+                                <a href="/emails"><span>Event</span></a>
                             </div>
                         </li>
                     </ul>

@@ -22,3 +22,7 @@ Auth::routes();
 
 Route::get('/showlist', 'ContactController@showlist');
 Route::post('/showlist', 'ContactController@showlist');
+
+Route::get('/record', 'ContactController@record');
+Route::get('/record/{id}', 'ContactController@record');
+Route::post('/record/{id}', 'ContactController@record');

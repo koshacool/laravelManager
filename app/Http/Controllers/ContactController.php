@@ -34,7 +34,7 @@ class ContactController extends Controller
     }
 
     /**
-     * Show the application dashboard.
+     * Show the contact list
      *
      * @return \Illuminate\Http\Response
      */
@@ -46,25 +46,40 @@ class ContactController extends Controller
 
         $contacts = Contact::with(['phones' => function ($query) {
             $query->where('best_phone', '=', '1');
-
-
-//                $data['secondarySortColumn'] => $data['sortDirectionSecondaryColumn']),
         }])
+            ->where('user_id', '=', Auth::user()->id)
             ->orderBy($sortValues['mainSortColumn'], $sortValues['sortDirectionMainColumn'])
             ->orderBy($sortValues['secondarySortColumn'], $sortValues['sortDirectionSecondaryColumn'])
-            ->paginate(3);
+            ->paginate(ROWS_ON_PAGE);
+
 
         $sortValues['page'] = $contacts->currentPage();
         $sortValues['offset'] = $contacts->firstItem();
         $pagination = new Pagination();
-        //Get pages for display pages links
         $firstLastPages = $pagination->pagination($contacts->currentPage(), $contacts->lastPage());
         $sortValues = array_merge($firstLastPages, $sortValues);
 
+        return view('pages.showlist', ['contacts' => $contacts, 'sortValues' => $sortValues]);
+    }
 
-        return view('pages.showlist',
-            ['contacts' => $contacts,
-             'sortValues' => $sortValues]);
+    public function record(Request $request, $id = 1)
+    {
+//        return $id;
+//        return Auth::user()->contacts()->phones()->find(1);
+////            ->with('phones')
+////            ->with('addresses')
+////            ->with('city')
+////            ->find($id);
+
+
+        return $contact = Contact::with('phones')
+            ->with('addresses')
+            ->with('city')
+            ->find($id);
+
+
+//        return $contact->location;
+        return view('pages.record', ['contact' => $contact]);
     }
 
     public function addContact()

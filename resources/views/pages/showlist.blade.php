@@ -40,7 +40,7 @@
                     </div>
                 </div>
                 <div id="list">
-                    @foreach ( $contacts  as $contact)
+                    @foreach ($contacts  as $contact)
                         <div class="list">
                             <div class="sequence"><?= $sortValues['offset'] . ".";
                                 $sortValues['offset']++; ?>
