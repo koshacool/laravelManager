@@ -25,7 +25,7 @@
             <ul class="menu">
                 <li>
                     <div class="linkStyle">
-                        <a href="/showlist"><img src="images/home.png"><span>Home</span></a>
+                        <a href="/showlist"><img src="/images/home.png"><span>Home</span></a>
                     </div>
                     <ul class="submenu">
                         <li>
@@ -49,7 +49,7 @@
                 <a href="{{ url('/logout') }}"
                    onclick="event.preventDefault();
                                                      document.getElementById('logout-form').submit();">
-                    <img src="images/logoff.png">
+                    <img src="/images/logoff.png">
                     <span>Logout</span>
                 </a>
 

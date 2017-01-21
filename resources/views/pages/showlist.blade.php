@@ -52,7 +52,7 @@
                             <div class="actionsBottom">
                                 <div class="editButton">
                                     <div>
-                                        <a href="/contact/record/{{ $contact->id }}">
+                                        <a href="/record/{{ $contact->id }}">
                                             <span>edit</span>
                                         </a>
                                     </div>

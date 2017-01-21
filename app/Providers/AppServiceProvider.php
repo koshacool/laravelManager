@@ -5,6 +5,8 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 Use View;
 Use Auth;
+use Validator;
+use App\Http\Middleware\CustomValidator;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -15,10 +17,14 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-//        View::share('user', Auth::user());
-//        View::creator('*', function($view){
-//            $view->with('user', Auth::user());
-//        });
+        Validator::resolver(function($translator, $data, $rules, $messages)
+        {
+            //$translator -данные о локале, берется из app.conf
+            //$data - массив с данными
+            //$rule - название правила (required, max, min...)
+
+            return new CustomValidator($translator, $data, $rules, $messages); // здесь мы добавили наш валидатор
+        });
     }
 
     /**

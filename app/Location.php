@@ -13,7 +13,7 @@ class Location extends Model
      * @var array
      */
     protected $fillable = [
-        'city_id', 'country_id', 'state_id',
+        'city_id', 'country_id', 'state_id', 'contact_id'
     ];
 
     public function contact()

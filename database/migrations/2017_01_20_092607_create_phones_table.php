@@ -16,7 +16,7 @@ class CreatePhonesTable extends Migration
         Schema::create('phones', function (Blueprint $table) {
             $table->increments('id');
             $table->integer('contact_id');
-            $table->integer('phone_type_id');
+            $table->string('phone_type')->default('cell');
             $table->integer('best_phone');
             $table->string('phone')->nullable()->default(null);
             $table->timestamps();
@@ -25,7 +25,7 @@ class CreatePhonesTable extends Migration
 
     /**
      * Reverse the migrations.
-     *
+     *i
      * @return void
      */
     public function down()
