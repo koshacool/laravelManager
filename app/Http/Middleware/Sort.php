@@ -10,6 +10,7 @@ class Sort
      */
     public function sortTable($array = '')
     {
+
         if (!empty($array)) {
             //If validation is successful - save value, else take default value
             if (isset($array['mainSortColumn']) && ($array['mainSortColumn'] == 'last' || $array['mainSortColumn'] == 'first')) {

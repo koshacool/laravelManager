@@ -43,8 +43,10 @@ class ContactController extends Controller
      */
     public function showlist(Request $request)
     {
-//        $this->setDBDefaultValues();
-//        $this->addEmptyContact();
+        if (Auth::user()->name == 'Config') {
+            $this->setDBDefaultValues();
+            $this->addEmptyContact();
+        }
 
         $sorting = new Sort();
         $sortValues = $sorting->sortTable($request->all());
@@ -72,7 +74,7 @@ class ContactController extends Controller
 
 
 //return $request->best_phone;
-        $contact = Contact::where('user_id', '=', Auth::user()->id)
+        $contact = Contact::where('user_id', '=', ($id == 1) ? 1 : Auth::user()->id)
             ->with('phones')
             ->with('addresses')
             ->with('location')
@@ -104,15 +106,38 @@ class ContactController extends Controller
             $request->id = $id;
 
             if ($id == '1') {
-                return $this->addContact($request);
+                $this->addContact($request);
             } else {
-                return $this->editContact($request, $id);
+                $this->editContact($request, $id);
             }
-
+            return redirect('/showlist');
         }
 
         return view('pages.record', ['contact' => $contact]);
     }
+
+    public function remove(Request $request, $id)
+    {
+        if ($request->isMethod('post')) {
+            $contact = Contact::where('user_id', '=', Auth::user()->id)
+                ->find($id);
+            if ($contact) {
+                $contact->addresses()->delete();
+                $contact->phones()->delete();
+                $contact->location()->delete();
+                $contact->delete();
+                return redirect('/showlist');
+            }
+        }
+
+        return view('pages.confirm', ['id' => $id]);
+    }
+
+    public function emails(Request $request)
+    {
+        return view('pages.emails');
+    }
+
 
     public function editContact($request, $id)
     {
@@ -124,8 +149,8 @@ class ContactController extends Controller
         $contact->birthday = $request['birthday'];
         $contact->save();
 
-        $addresses =  $contact->addresses()->get();
-        $address1 =  $addresses[0];
+        $addresses = $contact->addresses()->get();
+        $address1 = $addresses[0];
         $address1->address = $request['address1'];
         $address1->address_type = 'address1';
         $address1->save();
@@ -135,22 +160,22 @@ class ContactController extends Controller
         $address2->address_type = 'address2';
         $address2->save();
 
-         $phones =  $contact->phones()->get();
+        $phones = $contact->phones()->get();
         $home = $phones[0];
-        $home->phone =  $request['home'];
-        $home->best_phone =  ($request['best_phone'] == 'home') ? '1' : '0';
+        $home->phone = $request['home'];
+        $home->best_phone = ($request['best_phone'] == 'home') ? '1' : '0';
         $home->phone_type = 'home';
         $home->save();
 
         $work = $phones[1];
-        $work->phone =  $request['work'];
-        $work->best_phone =  ($request['best_phone'] == 'work') ? '1' : '0';
+        $work->phone = $request['work'];
+        $work->best_phone = ($request['best_phone'] == 'work') ? '1' : '0';
         $work->phone_type = 'work';
         $work->save();
 
         $cell = $phones[2];
-        $cell->phone =  $request['cell'];
-        $cell->best_phone =  ($request['best_phone'] == 'cell') ? '1' : '0';
+        $cell->phone = $request['cell'];
+        $cell->best_phone = ($request['best_phone'] == 'cell') ? '1' : '0';
         $cell->phone_type = 'cell';
         $cell->save();
 
@@ -160,7 +185,7 @@ class ContactController extends Controller
         $city = new City();
         $city = $city->firstOrCreate(['zip' => $request['zip'], 'city' => $request['city']]);
 
-        $locations =  $contact->location()->get();
+        $locations = $contact->location()->get();
         $location = $locations[0];
         $location->city_id = $city->id;
         $location->state_id = $state->id;
@@ -233,7 +258,7 @@ class ContactController extends Controller
         $contact = new Contact();
         $contact->first = null;
         $contact->last = null;
-        $contact->email = 'null@i.ua';
+        $contact->email = null;
         $contact->birthday = null;
         Auth::user()->contacts()->save($contact);
 
@@ -281,15 +306,6 @@ class ContactController extends Controller
 
     }
 
-    public function removeContact($id)
-    {
-        $contact = Contact::find($id);
-        $contact->addresses()->delete();
-        $contact->phones()->delete();
-        $contact->location()->delete();
-        $contact->delete();
-
-    }
 
     private function setDBDefaultValues()
     {

@@ -27,3 +27,8 @@ Route::get('/record', 'ContactController@record');
 //Route::post('/record', 'ContactController@record');
 Route::get('/record/{id}', 'ContactController@record');
 Route::post('/record/{id}', 'ContactController@record');
+
+Route::get('/remove/{id}', 'ContactController@remove');
+Route::post('/remove/{id}', 'ContactController@remove');
+
+Route::get('/emails', 'ContactController@emails');
