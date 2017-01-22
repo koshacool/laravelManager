@@ -10,6 +10,7 @@ use Auth;
 use App\Http\Middleware\Sort;
 use App\Http\Middleware\Pagination;
 use Illuminate\Contracts\Validation\Validator;
+use Cookie;
 
 use App\Contact;
 use App\Phone;
@@ -24,8 +25,6 @@ use App\Location;
 
 class ContactController extends Controller
 {
-
-
     /**
      * Create a new controller instance.
      *
@@ -43,6 +42,7 @@ class ContactController extends Controller
      */
     public function showlist(Request $request)
     {
+
         if (Auth::user()->name == 'Config') {
             $this->setDBDefaultValues();
             $this->addEmptyContact();
@@ -116,8 +116,12 @@ class ContactController extends Controller
         return view('pages.record', ['contact' => $contact]);
     }
 
-    public function remove(Request $request, $id)
+    public function remove(Request $request, $id = null)
     {
+        if (!$id) {
+            return redirect('/showlist');
+        }
+
         if ($request->isMethod('post')) {
             $contact = Contact::where('user_id', '=', Auth::user()->id)
                 ->find($id);
@@ -135,7 +139,168 @@ class ContactController extends Controller
 
     public function emails(Request $request)
     {
-        return view('pages.emails');
+       $emails = Cookie::get('cookieEmailsString'); //Get  data from COOKIE
+        Cookie::queue(Cookie::forget('cookieEmailsString'));//Remove cookie
+        $urlPath = parse_url($_SERVER['HTTP_REFERER'], PHP_URL_PATH);//Save url path from which a visitor came to value
+
+        //If user doesn't come from EventContacts.php set empty COOKIE with emails
+        if (!preg_match("/^\/select$/", $urlPath)) {
+            $emails = null;
+        }
+
+        //If user push 'Select email' save data to COOKIE and redirect to EventContacts page
+        if ($request->select) {
+            Cookie::queue('cookieEmailsString', $request->emails);
+            return redirect("/select");
+            exit();
+        }
+
+        if ($request->send) {
+            $emails = explode(',', $emails);
+            $newEmails = findNewEmails($emails);
+            if (empty($newEmails)) {
+                return redirect("/showlist");
+                exit();
+            }
+        }
+
+        return view('pages.emails', ['emails' => $emails]);
+    }
+
+    public function select(Request $request)
+    {
+        $arrSelectedEmails = null;
+        $emails = null;
+        $checkboxes = null;
+
+        //Save url path from which a visitor came
+        $urlPath = null;
+        if (!empty($_SERVER['HTTP_REFERER'])) {
+            $urlPath = parse_url($_SERVER['HTTP_REFERER'], PHP_URL_PATH);//Save url path from which a visitor came to value
+        }
+
+        //If user doesn't come from /select - set empty COOKIE with emails
+        if (!preg_match("/^\/select$/", $urlPath)) {
+            //Save data from COOKIE to array
+            $emailsString = Cookie::get('cookieEmailsString');
+        }
+
+        //Save entered emails from page send Emails
+        if (!empty($emailsString)) {
+            //convert input string with emails to array
+            $arraySaveEmails = explode(',', $emailsString);
+
+
+            //Remove whitespaces in values
+            foreach ($arraySaveEmails as $key => $value) {
+                $arraySaveEmails[$key] = trim($value);
+            }
+            $emailsString = null;
+
+            //Remove from array saved emails
+            foreach ($arraySaveEmails as $key => $value) {
+                $contacts = Contact::where('user_id', '=', Auth::user()->id)
+                    ->where('email', '=', $value)
+                    ->get();
+
+                foreach ($contacts as $contact) {
+
+//                    if ($contact->email == $value) {
+                        $arrSelectedEmails[$contact->id] = $value;
+                        unset($arraySaveEmails[$key]);
+//                    }
+                }
+            }
+
+
+            //Save emails from array to string value
+            foreach ($arraySaveEmails as $key => $value) {
+                if (empty($emails)) {
+                    $emails = $value;
+                } else {
+                    $emails .= ',' . $value;
+                }
+            }
+        }
+
+
+        $sorting = new Sort();
+        $sortValues = $sorting->sortTable($request->all());
+
+        $contacts = Contact::with(['phones' => function ($query) {
+            $query->where('best_phone', '=', '1');
+        }])
+            ->where('user_id', '=', Auth::user()->id)
+            ->orderBy($sortValues['mainSortColumn'], $sortValues['sortDirectionMainColumn'])
+            ->orderBy($sortValues['secondarySortColumn'], $sortValues['sortDirectionSecondaryColumn'])
+            ->paginate(ROWS_ON_PAGE);
+
+
+        $sortValues['page'] = $contacts->currentPage();
+        $sortValues['offset'] = $contacts->firstItem();
+        $pagination = new Pagination();
+        $firstLastPages = $pagination->pagination($contacts->currentPage(), $contacts->lastPage());
+        $sortValues = array_merge($firstLastPages, $sortValues);
+
+        if ($request->isMethod('post')) {
+            $arrSelectedEmails = Cookie::get('arrSelectedEmails');
+            $lastShowContacts = Cookie::get('contacts');
+//            return $lastShowContacts;
+
+
+            $allInputs = $request->input();
+            foreach ($allInputs as $key => $value) {
+                if (is_numeric($key)) {
+                    $checkboxes[$key] = $value;
+                }
+            }
+            if ($request->selectAll) {
+                $checkboxes['selectAll'] = $request->selectAll;
+            }
+
+            list($arrSelectedEmails) = $this->saveSelect($checkboxes, $arrSelectedEmails, $lastShowContacts);//Check which emails from last page save to array
+
+
+        }
+
+        foreach ($contacts as $contact) {
+            $arrayForTestSelect[$contact->id] = $contact->email;
+        }
+
+        $selectAll = $this->checkPushSelectAll($arrSelectedEmails, $arrayForTestSelect);//Check to display button 'selectAll' selected
+        foreach ($contacts as $contact) {
+            $arrayForTestSelect[$contact->id] = $contact->email;
+        }
+        $selectAll = $this->checkPushSelectAll($arrSelectedEmails, $arrayForTestSelect);//Check to display button 'selectAll' selected
+
+
+
+        Cookie::queue('contacts', $arrayForTestSelect);
+//        return Cookie::get('contacts');
+        Cookie::queue('emails', $emails);
+        Cookie::queue('arrSelectedEmails', $arrSelectedEmails);
+
+
+        if($request->accept) {
+            foreach ($arrSelectedEmails as $key => $value) {
+                if (empty($emails)) {
+                    $emails = $value;
+                } else {
+                    $emails .= ',' . $value;
+                }
+            }
+            Cookie::queue('cookieEmailsString', $emails);
+            return redirect("/emails");
+            exit();
+
+        }
+
+        return view('pages.select', [
+            'contacts' => $contacts,
+            'sortValues' => $sortValues,
+            'selectAll' => $selectAll,
+            'selected' => $arrSelectedEmails,
+        ]);
     }
 
 
@@ -342,5 +507,117 @@ class ContactController extends Controller
 
     }
 
+    /**
+     * Save selected data on page to array
+     *
+     * @param array $arrayPostValues Array with data recieved from POST
+     * @param array $arrSelectSave Array with data selected on page earlier
+     * @param array $arrDateShowOnPage Array with data displayed on the page
+     * @return array
+     */
+    public function saveSelect($arrayPostValues, $arrSelectSave, $arrDateShowOnPage)
+    {
+        $displayedEmails = 0;//number displayed data on page
+        $savedEmails = 0;//number saved data
+        $selectedEmails = 0;//number selected data on page
+
+        //count all shown data($displayedEmails), count the saved data, count selected data($selectedEmails)
+        foreach ($arrDateShowOnPage as $key => $value) {
+            $displayedEmails++;
+            if (isset($arrSelectSave[$key])) {
+                $savedEmails++;
+            }
+            if (isset($arrayPostValues[$key])) {
+                $selectedEmails++;
+            }
+        }
+
+        //Check select all if exist checkbox selectAll
+        if (isset($arrayPostValues['selectAll'])) {
+
+            if ($displayedEmails == $selectedEmails) {//Save all emails which displayed in page
+                foreach ($arrDateShowOnPage as $key => $value) {
+                    $arrSelectSave[$key] = $value;
+                }
+            } else {//When didn't select all emails
+                foreach ($arrDateShowOnPage as $key => $value) {
+                    if ($displayedEmails == $savedEmails) {
+                        if (!isset($arrayPostValues[$key])) {//Remove from saved emails not selected emails
+                            if (isset($arrSelectSave[$key])) {
+                                unset($arrSelectSave[$key]);
+                            }
+                        } else {//Save selected emails
+                            $arrSelectSave[$key] = $value;
+                        }
+                    } else {
+                        $arrSelectSave[$key] = $value;//save all shown rows
+                    }
+                }
+            }
+
+        } else {//Check select emails if not exist checkbox selectAll
+            if ($displayedEmails == $selectedEmails && $displayedEmails == $savedEmails) {//Remove all shown emails
+                foreach ($arrDateShowOnPage as $key => $value) {
+                    if (isset($arrSelectSave[$key])) {
+                        unset($arrSelectSave[$key]);
+                    }
+                }
+            } elseif ($displayedEmails != $selectedEmails && $displayedEmails == $savedEmails) {//Remove all non-selected emails
+                foreach ($arrDateShowOnPage as $key => $value) {
+                    if (isset($arrSelect[$key])) {
+                        $arrSelectSave[$key] = $value;
+                    } else {
+                        if (isset($arrSelectSave[$key])) {
+                            unset($arrSelectSave[$key]);
+                        }
+                    }
+                }
+            } elseif ($displayedEmails == $selectedEmails && $displayedEmails != $savedEmails) {//save all shown emails
+                foreach ($arrDateShowOnPage as $key => $value) {
+                    $arrSelectSave[$key] = $value;
+                }
+            } else {//save only select rows
+                foreach ($arrDateShowOnPage as $key => $value) {
+                    if (isset($arrayPostValues[$key])) {
+                        $arrSelectSave[$key] = $value;
+                    } else {
+                        if (isset($arrSelectSave[$key])) {
+                            unset($arrSelectSave[$key]);
+                        }
+                    }
+
+                }
+            }
+        }
+        return array($arrSelectSave);
+    }
+
+    /**
+     * Check to show checkbox 'Select All' selected or not selected on page EventContacts
+     *
+     * @param array $arrSelectSave Array with data selected on page earlier
+     * @param array $arrDateShowOnPage Array with data displayed on the page
+     * @return string
+     */
+    public function checkPushSelectAll($arrSelectSave, $arrDateShowOnPage)
+    {
+        $countRows = 0;//number displayed data on page
+        $countSave = 0; //number saved data
+
+        //count all shown data($countRows), count the saved data($countSave)
+        foreach ($arrDateShowOnPage as $key => $value) {
+            $countRows++;
+            if (isset($arrSelectSave[$key])) {
+                $countSave++;
+            }
+        }
+        //check to select button 'SelectAll'
+        if ($countRows == $countSave) {
+            $selectAll = 'checked';
+        } else {
+            $selectAll = '';
+        }
+        return $selectAll;
+    }
 
 }

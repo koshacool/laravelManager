@@ -17,6 +17,7 @@
                 <input type="hidden" name="sortDirectionSecondaryColumn" id="sortDirectionSecondaryColumn"
                        value=<?= $sortValues['sortDirectionSecondaryColumn'] ?>>
                 <input type="hidden" name="page" id="currentPage" value=<?= $sortValues['page'] ?>>
+
                 <div class='formBackgroung' id='formBackgroung'>
                     <div class="headerContactsList">
                         <div class="sequence"></div>
@@ -45,6 +46,7 @@
                             <span>Actions</span>
                         </div>
                     </div>
+
                     <div id="list">
                         @foreach ($contacts  as $contact)
                             <div class="list">
