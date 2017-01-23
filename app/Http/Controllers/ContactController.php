@@ -114,6 +114,21 @@ class ContactController extends Controller
         return view('pages.record', ['contact' => $contact]);
     }
 
+    public function view($id)
+    {
+        $contact = Contact::where('user_id', '=', Auth::user()->id)
+            ->with('phones')
+            ->with('addresses')
+            ->with('location')
+            ->find($id);
+
+        $contact->city = City::where('id', '=', $contact->location->city_id)->get();
+        $contact->state = State::where('id', '=', $contact->location->state_id)->get();
+        $contact->country = Country::where('id', '=', $contact->location->country_id)->get();
+
+        return view('pages.view', ['contact' => $contact]);
+    }
+
     public function remove(Request $request, $id = null)
     {
         if (!$id) {
