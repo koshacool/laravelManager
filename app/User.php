@@ -37,7 +37,13 @@ class User extends Authenticatable
         $this->attributes['password'] = bcrypt($value);
     }
 
-    public function getNameAttribute ($value) {
-        return 'Logged as: ' . $value;
+//    public function getNameAttribute ($value) {
+//        return 'Logged as: ' . $value;
+//    }
+
+    public function contacts()
+    {
+        return $this->hasMany('App\Contact');
     }
+
 }

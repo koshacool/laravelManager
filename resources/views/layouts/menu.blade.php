@@ -25,31 +25,31 @@
             <ul class="menu">
                 <li>
                     <div class="linkStyle">
-                        <a href="/contact/showlist"><img src="images/home.png"><span>Home</span></a>
+                        <a href="/showlist"><img src="/images/home.png"><span>Home</span></a>
                     </div>
                     <ul class="submenu">
                         <li>
                             <div class="linkStyle">
-                                <a href="/contact/record"><span>Add</span></a>
+                                <a href="/record"><span>Add</span></a>
                             </div>
                         </li>
                         <li>
                             <div class="linkStyle">
-                                <a href="/contact/emails"><span>Event</span></a>
+                                <a href="/emails"><span>Event</span></a>
                             </div>
                         </li>
                     </ul>
                 </li>
             </ul>
             <div class="logged">
-                {{ $user->name }}
+                 {{ 'Logged as: ' . $user->name }}
             </div>
             <div class="linkStyle">
 
                 <a href="{{ url('/logout') }}"
                    onclick="event.preventDefault();
                                                      document.getElementById('logout-form').submit();">
-                    <img src="images/logoff.png">
+                    <img src="/images/logoff.png">
                     <span>Logout</span>
                 </a>
 
