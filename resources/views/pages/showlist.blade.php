@@ -69,7 +69,7 @@
                                     <div class="actionDelete">
                                         <div class="deleteButton">
                                             <div>
-                                                <a href="/remove/{{ $contact->id }}">
+                                                <a href="/view/{{ $contact->id }}">
                                                     <span>view</span>
                                                 </a>
                                             </div>
