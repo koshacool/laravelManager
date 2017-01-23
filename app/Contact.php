@@ -15,6 +15,24 @@ class Contact extends Model
     protected $fillable = [
         'first', 'last', 'email', 'birthday', 'user_id','id'
     ];
+
+    public function setFirstAttribute($value)
+    {
+        $this->attributes['first'] = ucfirst($value);
+    }
+
+    public function setLastAttribute($value)
+    {
+        $this->attributes['last'] = ucfirst($value);
+    }
+
+    public function setEmailAttribute($value)
+    {
+        $this->attributes['email'] = trim($value);
+    }
+
+
+
     public function user()
     {
         return $this->belongsTo('App\User');

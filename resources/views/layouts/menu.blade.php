@@ -42,7 +42,7 @@
                 </li>
             </ul>
             <div class="logged">
-                {{ $user->name }}
+                 {{ 'Logged as: ' . $user->name }}
             </div>
             <div class="linkStyle">
 

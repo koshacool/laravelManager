@@ -12,6 +12,7 @@ return [
     | as the size rules. Feel free to tweak each of these messages here.
     |
     */
+    'emails'             => 'Bad emails. After each email except the last, must be a comma.',
     'newemail'             => 'The :attribute is using already.',
     'accepted'             => 'The :attribute must be accepted.',
     'active_url'           => 'The :attribute is not a valid URL.',

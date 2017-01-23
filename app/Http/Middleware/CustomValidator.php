@@ -10,9 +10,9 @@ class CustomValidator extends Validator
 
     public function validateNewemail($attribute, $value, $parameters)
     {
-        //$atribute - это название поля, в нашем случае site
-        //$value - значение поля
-        //$parameters - это параметры, которые можно передать так urlrl:ru, ($parameters=['ru'])
+        //$atribute - field name
+        //$value - field's value
+        //$parameters - parameters
         $contacts = Contact::where('email', '=', $value)
             ->where('user_id', '=', Auth::user()->id)
             ->get();
@@ -22,6 +22,21 @@ class CustomValidator extends Validator
                 if ($contact->id != $parameters[0]) {
                     return false;
                 }
+            }
+        }
+
+
+        return true;
+    }
+
+    public function validateEmails($attribute, $value, $parameters)
+    {
+        $emails = explode(',', $value);
+
+        foreach ($emails as $email) {
+            $email = trim($email);
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                return false;
             }
         }
 

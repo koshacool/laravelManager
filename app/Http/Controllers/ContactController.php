@@ -42,7 +42,6 @@ class ContactController extends Controller
      */
     public function showlist(Request $request)
     {
-
         if (Auth::user()->name == 'Config') {
             $this->setDBDefaultValues();
             $this->addEmptyContact();
@@ -99,7 +98,6 @@ class ContactController extends Controller
                 'state' => 'required',
                 'country' => 'required',
                 'birthday' => 'required',
-
             ];
 
             $this->validate($request, $validationRules);
@@ -139,7 +137,7 @@ class ContactController extends Controller
 
     public function emails(Request $request)
     {
-       $emails = Cookie::get('cookieEmailsString'); //Get  data from COOKIE
+        $emails = Cookie::get('cookieEmailsString'); //Get  data from COOKIE
         Cookie::queue(Cookie::forget('cookieEmailsString'));//Remove cookie
         $urlPath = parse_url($_SERVER['HTTP_REFERER'], PHP_URL_PATH);//Save url path from which a visitor came to value
 
@@ -148,22 +146,36 @@ class ContactController extends Controller
             $emails = null;
         }
 
-        //If user push 'Select email' save data to COOKIE and redirect to EventContacts page
-        if ($request->select) {
-            Cookie::queue('cookieEmailsString', $request->emails);
-            return redirect("/select");
-            exit();
-        }
+        if ($request->isMethod('post')) {
+            //If user push 'Select email' save data to COOKIE and redirect to EventContacts page
+            if ($request->select) {
+                Cookie::queue('cookieEmailsString', $request->emails);
+                return redirect("/select");
+                exit();
+            }
 
-        if ($request->send) {
-            $emails = explode(',', $emails);
-            $newEmails = findNewEmails($emails);
-            if (empty($newEmails)) {
+            if ($request->send) {
+                $this->validate($request, ['emails' => 'required|emails']);
+                $emails = explode(',', $request->emails);
+                $emails = $this->findNewEmails($emails);
+                if (empty($emails)) {
+                    return redirect("/showlist");
+                    exit();
+                }
+            }
+
+
+            if ($request->save) {
+                $allInputs = $request->input();
+                foreach ($allInputs as $key => $value) {
+                    if (is_numeric($key)) {
+                        $this->addEmptyContact($value);
+                    }
+                }
                 return redirect("/showlist");
                 exit();
             }
         }
-
         return view('pages.emails', ['emails' => $emails]);
     }
 
@@ -206,8 +218,8 @@ class ContactController extends Controller
                 foreach ($contacts as $contact) {
 
 //                    if ($contact->email == $value) {
-                        $arrSelectedEmails[$contact->id] = $value;
-                        unset($arraySaveEmails[$key]);
+                    $arrSelectedEmails[$contact->id] = $value;
+                    unset($arraySaveEmails[$key]);
 //                    }
                 }
             }
@@ -274,14 +286,14 @@ class ContactController extends Controller
         $selectAll = $this->checkPushSelectAll($arrSelectedEmails, $arrayForTestSelect);//Check to display button 'selectAll' selected
 
 
-
         Cookie::queue('contacts', $arrayForTestSelect);
 //        return Cookie::get('contacts');
         Cookie::queue('emails', $emails);
         Cookie::queue('arrSelectedEmails', $arrSelectedEmails);
 
 
-        if($request->accept) {
+        if ($request->accept) {
+            $emails = Cookie::get('emails');
             foreach ($arrSelectedEmails as $key => $value) {
                 if (empty($emails)) {
                     $emails = $value;
@@ -417,13 +429,12 @@ class ContactController extends Controller
         ]);
     }
 
-
-    public function addEmptyContact()
+    public function addEmptyContact($email = null)
     {
         $contact = new Contact();
         $contact->first = null;
         $contact->last = null;
-        $contact->email = null;
+        $contact->email = $email;
         $contact->birthday = null;
         Auth::user()->contacts()->save($contact);
 
@@ -471,10 +482,8 @@ class ContactController extends Controller
 
     }
 
-
     private function setDBDefaultValues()
     {
-
         $phoneType1 = new PhoneType;
         $phoneType2 = new PhoneType;
         $phoneType3 = new PhoneType;
@@ -618,6 +627,33 @@ class ContactController extends Controller
             $selectAll = '';
         }
         return $selectAll;
+    }
+
+    /**
+     *If email exist in database, remove it from array
+     *
+     * @param $connect Connect to DataBase
+     * @param integer $user_id User's id, who add contact
+     * @param array $arrayEmails Array with emails
+     * @return array
+     */
+    public function findNewEmails(array $arrayEmails)
+    {
+
+        //Remove from array saved emails
+        foreach ($arrayEmails as $key => $value) {
+            $value = trim($value);
+            $contacts = Contact::where('user_id', '=', Auth::user()->id)
+                ->where('email', '=', $value)
+                ->get();
+
+            foreach ($contacts as $contact) {
+                if ($contact->email == $value) {
+                    unset($arrayEmails[$key]);
+                }
+            }
+        }
+        return $arrayEmails;
     }
 
 }

@@ -19,11 +19,7 @@ class AppServiceProvider extends ServiceProvider
     {
         Validator::resolver(function($translator, $data, $rules, $messages)
         {
-            //$translator -данные о локале, берется из app.conf
-            //$data - массив с данными
-            //$rule - название правила (required, max, min...)
-
-            return new CustomValidator($translator, $data, $rules, $messages); // здесь мы добавили наш валидатор
+            return new CustomValidator($translator, $data, $rules, $messages); //Add our own validator
         });
     }
 
