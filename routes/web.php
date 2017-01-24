@@ -11,32 +11,59 @@
 |
 */
 
-//Route::get('/', ['uses' => 'UsersController@authorisation']);
-Route::get('/', 'Auth\LoginController@showLoginForm')->name('login');
-Route::get('authorisation', ['uses' => 'UsersController@authorisation']);
-Route::get('users/registration', ['uses' => 'UsersController@registration']);
-Route::post('users/registration', ['uses' => 'UsersController@create']);
+//Route::get('/', 'Auth\LoginController@showLoginForm');//->name('login')
+Auth::routes();//Laravel auth
 
-//Laravel auth
-Auth::routes();
 
-Route::get('/showlist', 'ContactController@showlist');
-Route::post('/showlist', 'ContactController@showlist');
+$getRoutes = [
+    'Contact' => [
+        'showlist' => 'showlist',
+        'record' => 'record',
+        'remove' => 'remove',
+        'emails' => 'emails',
+        'select' => 'select',
+        'view' => 'view',
+        'remove' => 'remove',
+    ],
+    'Auth\Login' => [
+        '' => 'showLoginForm'
+    ],
 
-Route::get('/record', 'ContactController@record');
-//Route::post('/record', 'ContactController@record');
-Route::get('/record/{id}', 'ContactController@record');
-Route::post('/record/{id}', 'ContactController@record');
+];//Key is controller name, key is controller action
 
-Route::get('/view/{id}', 'ContactController@view');
+$postRoutes = [
+    'Contact' => [
+        'showlist' => 'showlist',
+        'emails' => 'emails',
+        'select' =>  'select',
+        'record' => 'record',
+        'remove' => 'remove',
+    ],
+];//Key is controller name, key is controller action
 
-Route::get('/remove', 'ContactController@remove');
-Route::get('/remove/{id}', 'ContactController@remove');
-Route::post('/remove/{id}', 'ContactController@remove');
+$urlPath = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);//The URI which was given in order to access this page
+$action = substr($urlPath, 1);//Get action name
 
-Route::get('/emails', 'ContactController@emails');
-Route::post('/emails', 'ContactController@emails');
+$existParam = strpos($action, '/');//Check exist parameter after action name
+if ($existParam) {
+    $action = substr($action, 0, $existParam);//Get action name
+    $urlPath = '/' . $action . '/{id}';//Get url with parameter for router
+}
 
-Route::get('/select', 'ContactController@select');
-Route::post('/select', 'ContactController@select');
+//Find route in 'get' queries
+foreach ($getRoutes as $key => $value) {
+    if (array_key_exists($action, $value)) {
+        $params = [$urlPath, $key . 'Controller@' . $value[$action]];
+        call_user_func_array('Route::get', $params);
+    }
+}
+//Find route in 'post' queries
+foreach ($postRoutes as $key => $value) {
+    if (array_key_exists($action, $value)) {
+        $params = [$urlPath, $key . 'Controller@' . $value[$action]];
+        call_user_func_array('Route::post', $params);
+
+    }
+}
+
 
